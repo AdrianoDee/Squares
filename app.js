@@ -1,6 +1,6 @@
-var express = require('express');
-var app = express();
-var serv = require('http').Server(app);
+var express = require('express'),
+ 		app = express(),
+ 		serv = require('http').Server(app);
 
 app.get('/',function(req, res) {
 	res.sendFile(__dirname + '/client/index.html');
@@ -10,78 +10,39 @@ app.use('/client',express.static(__dirname + '/client'));
 serv.listen(process.env.PORT || 2000);
 console.log("Server started.");
 
-var SOCKET_LIST = {};
-var PLAYER_LIST = {};
+var io = require('socket.io')(serv,{}),
+		SOCKET_LIST = {},
+ 		PLAYERS_MANAGER = new PoolManager(["Uint16",  //Entity_Img_Id			   (int from 0 to        +65.535)
+																			 "Uint16",  //Entity_Dimension_W   (int from 0 to        +65.535)
+                                    	 "Uint16",  //Entity_Dimension_H   (int from 0 to        +65.535)
+                                    	 "Uint32",  //Entity_Position_X    (int from 0 to +4.294.967.295)
+                                    	 "Uint32"], //Entity_Position_Y    (int from 0 to +4.294.967.295)
+                                    	 500);
 
-var Player = function(id){
-	var self = {
-		x:250,
-		y:250,
-		id:id,
-		number:"" + Math.floor(10 * Math.random()),
-		pressingRight:false,
-		pressingLeft:false,
-		pressingUp:false,
-		pressingDown:false,
-		maxSpd:10,
-	}
-	self.updatePosition = function(){
-		if(self.pressingRight)
-			self.x += self.maxSpd;
-		if(self.pressingLeft)
-			self.x -= self.maxSpd;
-		if(self.pressingUp)
-			self.y -= self.maxSpd;
-		if(self.pressingDown)
-			self.y += self.maxSpd;
-	}
-	return self;
-}
-
-var io = require('socket.io')(serv,{});
 io.sockets.on('connection', function(socket){
-	socket.id = Math.random();
+
+	var newPlayer = new Player();
+
+	socket.id = PLAYERS_MANAGER.insert(newPlayer);
+
+	newPlayer.id = socket.id;
+
 	SOCKET_LIST[socket.id] = socket;
 
-	var player = Player(socket.id);
-	PLAYER_LIST[socket.id] = player;
+	socket.emit("initPlayer",newPlayer);
 
-	socket.on('disconnect',function(){
+	socket.on("playerUpdate",function(data){
+		PLAYERS_MANAGER.encode(data,data.id);
+	});
+	socket.on("disconnect",function(){
+		PLAYERS_MANAGER.delete(socket.id);
 		delete SOCKET_LIST[socket.id];
-		delete PLAYER_LIST[socket.id];
 	});
-
-	socket.on('keyPress',function(data){
-		if(data.inputId === 'left')
-			player.pressingLeft = data.state;
-		else if(data.inputId === 'right')
-			player.pressingRight = data.state;
-		else if(data.inputId === 'up')
-			player.pressingUp = data.state;
-		else if(data.inputId === 'down')
-			player.pressingDown = data.state;
-	});
-
-
 });
 
 setInterval(function(){
-	var pack = [];
-	for(var i in PLAYER_LIST){
-		var player = PLAYER_LIST[i];
-		player.updatePosition();
-		pack.push({
-			x:player.x,
-			y:player.y,
-			number:player.number
-		});
-	}
-	for(var i in SOCKET_LIST){
-		var socket = SOCKET_LIST[i];
-		socket.emit('newPositions',pack);
-	}
 
-
-
+	for(var key in SOCKET_LIST)
+		SOCKET_LIST[key].emit("updatePlayers",PLAYERS_MANAGER.pool);
 
 },1000/25);

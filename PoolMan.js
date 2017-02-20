@@ -13,7 +13,7 @@
       //inIndex     = [],  //indices of in game entities
       outIndex      = [],  //indices of out game entities
       poolIncrement = 0;   //counter of all pool memory increment
-	//AIF	
+	//AIF
 	(function(){
 		for(var i = 0; i < dataTypes.length; ++i){
       switch (dataTypes[i]) {
@@ -38,7 +38,7 @@
   this.pool = [/*buffer,inIndex*/];
   //methods
   this.init = function(){
-  
+
   	var buffer = null,
   			inIndex = new Array();
 
@@ -50,10 +50,10 @@
       groupSize += numByte[i];
     for(i = 0; i < poolDimension; ++i)
       outIndex.push(i);
-      
+
     buffer = new ArrayBuffer(poolDimension*groupSize);
 
-    this.pool = [buffer,inIndex];
+    this.pool = [buffer,inIndex,poolDimension];
 
   };
 
@@ -86,7 +86,7 @@
     var index = NaN;
 
     if(outIndex.length > 0){
-      index = outIndex[0];d
+      index = outIndex[0];
       outIndex.splice(0,1);
 
     } else {
@@ -94,12 +94,14 @@
       for(i = poolDimension + 1; i < Math.floor(1.5*poolDimension); ++i)
         outIndex.push(i);
       poolDimension = Math.floor(1.5*poolDimension);
-      this.pool[0]/*buffer*/ = ArrayBuffer.transfer(this.pool[0]/*buffer*/,poolDimension*groupSize); 
+      this.pool[0]/*buffer*/ = ArrayBuffer.transfer(this.pool[0]/*buffer*/,poolDimension*groupSize);
+      this.pool[2] = poolDimension;
       ++poolIncrement;
     }
 
     this.encode(dataArray,index);
     this.pool[1]/*inIndex*/.push(index);
+    return index;
 
   };
 
@@ -113,13 +115,12 @@
       }
     }
   };
-};
 
-var entitiesManager = new PoolManager(["Uint16",  //Entity_Type          (int from 0 to        +65.535)
-                                       "Uint16",  //Entity_Static_Id     (int from 0 to        +65.535)
-                                       "Uint16",  //Entity_Img_Id        (int from 0 to        +65.535)
-                                       "Uint16",  //Entity_Dimension_W   (int from 0 to        +65.535)
-                                       "Uint16",  //Entity_Dimension_H   (int from 0 to        +65.535)
-                                       "Uint32",  //Entity_Position_X    (int from 0 to +4.294.967.295)
-                                       "Uint32"], //Entity_Position_Y    (int from 0 to +4.294.967.295)
-                                      500);
+  this.getDataTypes = function(){
+    return dataTypes;
+  };
+
+  this.getNumByte = function(){
+    return numByte;
+  };
+};
