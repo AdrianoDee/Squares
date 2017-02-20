@@ -10,20 +10,6 @@ app.use('/client',express.static(__dirname + '/client'));
 serv.listen(process.env.PORT || 2000);
 console.log("Server started.");
 
-
-//Implementazione del metodo extend per gli Oggetti
-;Object.prototype.extend = function (extendPrototype) {
-  var hasOwnProperty = Object.hasOwnProperty;
-  var object = Object.create(this);
-
-  for (var property in extendPrototype) {
-    if (hasOwnProperty.call(extendPrototype,property) ||
-        typeof object[property] === 'undefined') {
-          object[property] = extendPrototype[property];
-        }
-  }
-  return object;
-};
 //Implementazione del metodo transfer per gli ArrayBuffer
 if (!ArrayBuffer.transfer) {
     ArrayBuffer.transfer = function(source, length) {
@@ -75,21 +61,6 @@ if (!ArrayBuffer.transfer) {
             }
         }
     };
-}
-//Implementazione RequestAnimationFrame cross browser
-if ( !window.requestAnimationFrame ) {
-
-	window.requestAnimationFrame = ( function() {
-
-		return window.webkitRequestAnimationFrame ||
-		       window.mozRequestAnimationFrame    ||
-	      	 window.oRequestAnimationFrame      ||
-		       window.msRequestAnimationFrame     ||
-		function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
-
-			window.setTimeout( callback, 1000 / 60 );
-		};
-	} )();
 }
 
 
