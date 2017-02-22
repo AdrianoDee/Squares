@@ -27,7 +27,7 @@
 	};
 	this.move = function(socket){
 		this.data[0/*x*/] = this.temp_x;
-		this.data[1/*y*/] = this.temp_y;
+		this.data[2/*y*/] = this.temp_y;
 		socket.emit("playerUpdate",this.data);
 	};
 }

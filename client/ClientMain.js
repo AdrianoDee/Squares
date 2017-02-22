@@ -2,8 +2,7 @@ var canvas = document.getElementById("canvas"),
     ctx    = canvas.getContext("2d"),
     socket = io(),
     player = null;
-    playersManager = new ClientPoolManager(["Uint16",  //Entity_Id            (int from 0 to        +65.535)
-                                            "Uint32",  //Entity_Position_X    (int from 0 to +4.294.967.295)
+    playersManager = new ClientPoolManager(["Uint32",  //Entity_Position_X    (int from 0 to +4.294.967.295)
                                             "Uint32",  //Entity_Position_Y    (int from 0 to +4.294.967.295)
                                             "Uint16",  //Entity_Dimension_W   (int from 0 to        +65.535)
                                             "Uint16"], //Entity_Dimension_H   (int from 0 to        +65.535)
