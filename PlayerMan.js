@@ -1,3 +1,5 @@
+var exports = module.exports = {};
+
 exports.PlayerMan = function(x,y,w,h){
 	//Properties
 	this.id = NaN;

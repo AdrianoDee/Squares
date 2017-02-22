@@ -1,3 +1,5 @@
+;var implement = require("./Implementazioni.js")
+
 var exports = module.exports = {};
 
 exports.PoolManager = function(DATATYPES, //array value: "Int8","Uint8",
@@ -96,7 +98,7 @@ exports.PoolManager = function(DATATYPES, //array value: "Int8","Uint8",
       for(i = poolDimension + 1; i < Math.floor(1.5*poolDimension); ++i)
         outIndex.push(i);
       poolDimension = Math.floor(1.5*poolDimension);
-      this.pool[0]/*buffer*/ = ArrayBuffer.transfer(this.pool[0]/*buffer*/,poolDimension*groupSize);
+      this.pool[0]/*buffer*/ = implement.ArrayBuffer.transfer(this.pool[0]/*buffer*/,poolDimension*groupSize);
       this.pool[2] = poolDimension;
       ++poolIncrement;
     }

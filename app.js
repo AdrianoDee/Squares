@@ -1,5 +1,5 @@
 var playerman = require("./PlayerMan");
-var poolman = require("./PoolMan");
+var poolman = require("./PoolMan.js");
 
 var express = require('express'),
  		app = express(),
@@ -11,7 +11,6 @@ app.get('/',function(req, res) {
 app.use('/client',express.static(__dirname + '/client'));
 
 serv.listen(process.env.PORT || 2000);
-console.log("Server started.");
 
 var io = require('socket.io')(serv,{}),
 		SOCKET_LIST = {};
@@ -21,6 +20,8 @@ var io = require('socket.io')(serv,{}),
 																			 "Uint16",  //Entity_Dimension_W   (int from 0 to        +65.535)
                                     	 "Uint16"], //Entity_Dimension_H   (int from 0 to        +65.535)
                                     	 500);
+
+console.log("Server started.");
 
 io.sockets.on('connection', function(socket){
 

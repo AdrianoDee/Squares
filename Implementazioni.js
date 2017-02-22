@@ -1,17 +1,8 @@
-//Implementazione del metodo extend per gli Oggetti
-;Object.prototype.extend = function (extendPrototype) {
-  var hasOwnProperty = Object.hasOwnProperty;
-  var object = Object.create(this);
-
-  for (var property in extendPrototype) {
-    if (hasOwnProperty.call(extendPrototype,property) ||
-        typeof object[property] === 'undefined') {
-          object[property] = extendPrototype[property];
-        }
-  }
-  return object;
-};
 //Implementazione del metodo transfer per gli ArrayBuffer
+;var exports = module.exports = {};
+
+exports.Transfer = function () {
+
 if (!ArrayBuffer.transfer) {
     ArrayBuffer.transfer = function(source, length) {
         source = Object(source);
@@ -63,38 +54,4 @@ if (!ArrayBuffer.transfer) {
         }
     };
 }
-//Implementazione RequestAnimationFrame cross browser
-if ( !window.requestAnimationFrame ) {
-
-	window.requestAnimationFrame = ( function() {
-
-		return window.webkitRequestAnimationFrame ||
-		       window.mozRequestAnimationFrame    ||
-	      	 window.oRequestAnimationFrame      ||
-		       window.msRequestAnimationFrame     ||
-		function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
-
-			window.setTimeout( callback, 1000 / 60 );
-		};
-	} )();
 }
-
-//ottimizzazione dell'evento resize
-(function() {
-    var throttle = function(type, name, obj) {
-        obj = obj || window;
-        var running = false;
-        var func = function() {
-            if (running) { return; }
-            running = true;
-             requestAnimationFrame(function() {
-                obj.dispatchEvent(new CustomEvent(name));
-                running = false;
-            });
-        };
-        obj.addEventListener(type, func);
-    };
-
-    /* init - you can init any event */
-    throttle("resize", "optimizedResize");
-})();
