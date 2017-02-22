@@ -1,5 +1,5 @@
-require("./PlayerMan.js");
-require("./PoolMan.js");
+require("./PlayerMan");
+require("./PoolMan");
 
 var express = require('express'),
  		app = express(),
