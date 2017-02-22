@@ -35,7 +35,7 @@ io.sockets.on('connection', function(socket){
 	socket.emit("initPlayer",newPlayer);
 
 	socket.on("playerUpdate",function(data){
-		PLAYERS_MANAGER.encode(data,data[0/*id*/]);
+		PLAYERS_MANAGER.encode(data,socket.id);
 	});
 	socket.on("disconnect",function(){
 		PLAYERS_MANAGER.delete(socket.id);
