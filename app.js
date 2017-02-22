@@ -1,7 +1,6 @@
 var playerman = require("./PlayerMan");
 var poolman = require("./PoolMan");
 
-
 var express = require('express'),
  		app = express(),
  		serv = require('http').Server(app);
