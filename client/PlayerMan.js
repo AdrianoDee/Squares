@@ -1,13 +1,10 @@
 ;function PlayerMan(x,y,w,h){
 	//Properties
-	this.id= NaN;
-	this.w = w || 10;
-	this.h = h || 10;
-	this.x = x || 250;
-	this.y = y || 250;
+	this.id = NaN
+	this.data = [x || 250, y || 250, w || 10, h || 10];
 	//Properties for collision
-	this.temp_x = this.x;
-	this.temp_y = this.y;
+	this.temp_x = x || 250;
+	this.temp_y = y || 250;
 	//Properties for moves
 	this.toUp   = false;
 	this.toDown = false;
@@ -23,11 +20,14 @@
 		if(this.toUp && this.toRight) this.temp_x += 7; this.temp_y -= 7;
 		if(this.toDown && this.toLeft ) this.temp_x -= 7; this.temp_y += 7;
 		if(this.toDown && this.toRight) this.temp_x += 7; this.temp_y += 7;
-		return {temp_x : this.temp_x, temp_y : this.temp_y};
+		return {temp_x : this.temp_x,
+						temp_y : this.temp_y,
+						width  : this.data[3],
+						height : this.data[4]};
 	};
 	this.move = function(socket){
-		this.x = temp_x;
-		this.y = temp_y;
-		socket.emit("playerUpdate",this);
+		this.data[0/*x*/] = this.temp_x;
+		this.data[1/*y*/] = this.temp_y;
+		socket.emit("playerUpdate",this.data);
 	};
 }
