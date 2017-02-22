@@ -41,10 +41,10 @@ document.onload = function mainLoop(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     for(var i = 0; i < playersManager.inIndex.length; ++i){
       playerData = playersManager.parsedPool[playersManager.inIndex[i]];
-      ctx.fillRect(playerData[0/*x*/],
-                   playerData[1/*y*/],
-                   playerData[2/*w*/],
-                   playerData[3/*h*/]);
+      ctx.fillRect(playerData[1/*x*/],
+                   playerData[2/*y*/],
+                   playerData[3/*w*/],
+                   playerData[4/*h*/]);
     }
     //richiamo la funzione di callback per il loop
     requestAnimationFrame(mainLoop);
