@@ -1,4 +1,6 @@
-;function PoolManager(DATATYPES, //array value: "Int8","Uint8",
+var exports = module.exports = {};
+
+exports.PoolManager = function(DATATYPES, //array value: "Int8","Uint8",
                                  //             "Int16","Uint16",
                                  //             "Int32","Uint32","Float32",
                                  //             "Float64"

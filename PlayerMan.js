@@ -1,4 +1,4 @@
-;function PlayerMan(x,y,w,h){
+exports.PlayerMan = function(x,y,w,h){
 	//Properties
 	this.id = NaN;
 	this.data = [NaN,x || 250, y || 250, w || 10, h || 10];
