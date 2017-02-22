@@ -12,6 +12,8 @@
 	this.toRight= false;
 	//Methods
 	this.tryMove = function(){
+		this.temp_y = this.data[1/*x*/];
+		this.temp_y = this.data[2/*y*/];
 		if(this.toUp   ) this.temp_y -= 10;
 		if(this.toDown ) this.temp_y += 10;
 		if(this.toLeft ) this.temp_x -= 10;
