@@ -1,35 +1,71 @@
-;function PlayerMan(x,y,w,h){
-	//Properties
-	this.id = NaN;
-	this.data = [NaN,x || 250, y || 250, w || 10, h || 10];
-	//Properties for collision
-	this.temp_x = x || 250;
-	this.temp_y = y || 250;
-	//Properties for moves
-	this.toUp   = false;
-	this.toDown = false;
-	this.toLeft = false;
-	this.toRight= false;
-	//Methods
-	this.tryMove = function(){
-		this.temp_y = this.data[1/*x*/];
-		this.temp_y = this.data[2/*y*/];
-		if(this.toUp   ) this.temp_y -= 10;
-		if(this.toDown ) this.temp_y += 10;
-		if(this.toLeft ) this.temp_x -= 10;
-		if(this.toRight) this.temp_x += 10;
-		if(this.toUp && this.toLeft ) this.temp_x -= 7; this.temp_y -= 7;
-		if(this.toUp && this.toRight) this.temp_x += 7; this.temp_y -= 7;
-		if(this.toDown && this.toLeft ) this.temp_x -= 7; this.temp_y += 7;
-		if(this.toDown && this.toRight) this.temp_x += 7; this.temp_y += 7;
-		return {temp_x : this.temp_x,
-						temp_y : this.temp_y,
-						width  : this.data[3],
-						height : this.data[4]};
-	};
+"use strict"
+
+;function PlayerMan(id,player){
+	var DIRECTION = {"S":0,"SE":1,"E":2,"NE":3,"N":4,"NW":5,"W":6,"SW":7};
+	//properties
+	this._id = id || NaN;
+	this._x  = NaN;
+	this._y  = NaN;
+	this._dir= DIRECTION.S;
+	this._tileset = player.tileset || 0;
+	//
+	this.playerPack = Object.create(null);
+	this.playerPack.x  = player.x  || 250;
+	this.playerPack.y  = player.y  || 250;
+	this.playerPack.dir= player.tileset;
+	//move properties
+	this.maxSpd  = 5;
+	this.toRight = false;
+	this.toLeft  = false;
+	this.toUp    = false;
+	this.toDown  = false;
+	//methods
 	this.move = function(socket){
-		this.data[1/*x*/] = this.temp_x;
-		this.data[2/*y*/] = this.temp_y;
-		socket.emit("playerUpdate",this.data);
+
+		var flag = true;
+
+		this._x = this.playerPack.x;
+		this._y = this.playerPack.y;
+
+		if(this.toDown && this.toRight){
+			this._x += this.maxSpd;
+			this._y += this.maxSpd;
+			this._dir= DIRECTION.SE;
+		} else if(this.toDown && this.toLeft){
+			this._x -= this.maxSpd;
+			this._y += this.maxSpd;
+			this._dir= DIRECTION.SW;
+		} else if(this.toUp && this.toRight){
+			this._x += this.maxSpd;
+			this._y -= this.maxSpd;
+			this._dir= DIRECTION.NE;
+		} else if(this.toUp && this.toLeft){
+			this._x -= this.maxSpd;
+			this._y -= this.maxSpd;
+			this._dir= DIRECTION.NW;
+		} else if(this.toRight){
+			this._x += this.maxSpd;
+			this._dir= DIRECTION.E;
+		} else if(this.toLeft){
+			this._x -= this.maxSpd;
+			this._dir= DIRECTION.W;
+		} else if(this.toUp){
+			this._y -= this.maxSpd;
+			this._dir= DIRECTION.N;
+		} else if(this.toDown){
+			this._y += this.maxSpd;
+			this._dir= DIRECTION.S;
+		} else {
+			flag = false;
+		}
+		this.playerPack.dir = this._tileset + this._dir*5;
+		if(flag){
+			this.playerPack.x    = this._x;
+			this.playerPack.y    = this._y;
+			++this.playerPack.dir;
+			socket.emit("updatePlayer",this.playerPack);
+		} else {
+			socket.emit("updatePlayer",{"imgId":this.playerPack.dir,"dir":this.playerPack.dir});
+		}
 	};
 };

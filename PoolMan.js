@@ -1,130 +1,139 @@
-;var implement = require("./Implementazioni.js")
+'use strict'
 
-var exports = module.exports = {};
+;module.exports = function PoolMan(DATAKEYS, //vettore delle chiavi degli oggetti in pool
+                                   poolType,
+                                   poolStartDimension,
+                                   increment){
 
-exports.PoolManager = function(DATATYPES, //array value: "Int8","Uint8",
-                                 //             "Int16","Uint16",
-                                 //             "Int32","Uint32","Float32",
-                                 //             "Float64"
-                      startPoolDimension){
-  //private properties
   var
-      dataTypes     = DATATYPES;
-      poolDimension = startPoolDimension;
-      numByte       = [],  //for every dataType slot
-      groupSize     = 0,   //total entity byte size
-      //buffer      = null,//byte array for entities
-      //inIndex     = [],  //indices of in game entities
-      outIndex      = [],  //indices of out game entities
-      poolIncrement = 0;   //counter of all pool memory increment
-	//AIF
-	(function(){
-		for(var i = 0; i < dataTypes.length; ++i){
-      switch (dataTypes[i]) {
-        case "Int8": case "Uint8":
-          numByte[i] = 1;
-          break;
-        case "Int16": case "Uint16":
-          numByte[i] = 2;
-          break;
-        case "Int32": case "Uint32": case "Float32":
-          numByte[i] = 4;
-          break;
-        case "Float64":
-          numByte[i] = 8;
-          break;
-        default:
-          numByte[i] = 0;
-      }
+      POOL = Object.create(null),
+      poolType = poolType || "",
+      poolStartDimension = poolStartDimension || 100,
+      increment = increment || Math.floor(poolStartDimension/2);
+  //imposto i DATAKEYS in caso di passaggio di un vettore come elemento della
+  if(typeof DATAKEYS === "number"){
+    var array = new Array();
+    for(var i = 0; i < DATAKEYS; ++i){
+      array[i] = i;
     }
-	}())
-	//properties
-  this.pool = [/*buffer,inIndex*/];
+    DATAKEYS = array;
+  }
+
+  //properties
+  POOL.poolDimension = NaN;
+
+  POOL.pool    = null;
+
+  POOL.inIndex = null;
+
+  POOL.outIndex= null;
+
   //methods
-  this.init = function(){
+  POOL.createPoolElement = function(){
 
-  	var buffer = null,
-  			inIndex = new Array();
+    var newElement = Object.create(null);
 
-    poolDimension = startPoolDimension;
-    groupSize     = 0;
-    poolIncrement = 0;
+    for(var key in DATAKEYS)
+        newElement[DATAKEYS[key]] = null;
 
-    for(i = 0; i < numByte.length; ++i)
-      groupSize += numByte[i];
-    for(i = 0; i < poolDimension; ++i)
-      outIndex.push(i);
-
-    buffer = new ArrayBuffer(poolDimension*groupSize);
-
-    this.pool = [buffer,inIndex,poolDimension];
-
+    return newElement;
   };
+  POOL.modifyPoolElement = function(index,data){
 
-  this.encode = function(dataArray,index){
+    for(var key in DATAKEYS)
+      if(data[DATAKEYS[key]])
+        this.pool[index][DATAKEYS[key]] = data[DATAKEYS[key]];
+  };
+  POOL.modifyPoolDimension = function(flag,DELTA){
 
-    var offset = index*groupSize,
-        encodedData = new DataView(this.pool[0]/*buffer*/);
+    var
+        DELTA = DELTA || increment,
+        flag = flag || false,
+        id = NaN,
+        key= "",
+        newDimension = NaN,
+        newPool = Object.create(null);
 
-    for(var i = 0; i < dataTypes.length; ++i){
-      encodedData["set"+dataTypes[i]](offset,dataArray[i]);
-      offset += numByte[i];
+    if(!flag){
+      newDimension = this.poolDimension+DELTA;
+
+      for(id = this.poolDimension; id < newDimension; ++id){
+        this.outIndex.push(id);
+        this.pool[id] = this.createPoolElement();
+      }
+    } else {
+      newDimension = this.poolDimension-DELTA;
+
+      if(this.inIndex.length > newDimension)
+        this.inIndex = this.inIndex.slice(this.inIndex.length-newDimension);
+
+      this.outIndex = new Array();
+
+      for(id = 0; id < newDimension; ++id){
+        if(this.inIndex.hasOwnProperty(id)){
+          newPool[id] = this.pool[this.inIndex[id]];
+          this.inIndex[id] = id;
+        } else {
+          newPool[id] = this.createPoolElement();
+          this.outIndex.push(id);
+        }
+      }
+
+      this.pool = newPool;
     }
+    this.poolDimension = newDimension;
   };
+  POOL.init = function(dimension){
 
-  this.decode = function(index){
+    var dimension = dimension || poolStartDimension;
 
-    var offset = index*groupSize,
-        encodedData = new DataView(this.pool[0]/*buffer*/);
-        decodedData = [];
+    this.poolDimension = 0;
 
-    for(var i = 0; i < dataTypes.length; ++i){
-      decodedData.push(encodedData["get"+dataTypes[i]](offset));
-      offset += numByte[i];
-    }
-    return decodedData;
+    this.pool    = Object.create(null);
+
+    this.inIndex = new Array();
+
+    this.outIndex= new Array();
+
+    this.modifyPoolDimension(false,dimension);
   };
-
-  this.insert = function(dataArray){
+  POOL.insert = function(data){
 
     var index = NaN;
 
-    if(outIndex.length > 0){
-      index = outIndex[0];
-      outIndex.splice(0,1);
+    if(this.outIndex.length <= 0)
+      this.modifyPoolDimension();
 
-    } else {
-      index = poolDimension;
-      for(i = poolDimension + 1; i < Math.floor(1.5*poolDimension); ++i)
-        outIndex.push(i);
-      poolDimension = Math.floor(1.5*poolDimension);
-      this.pool[0]/*buffer*/ = implement.ArrayBuffer.transfer(this.pool[0]/*buffer*/,poolDimension*groupSize);
-      this.pool[2] = poolDimension;
-      ++poolIncrement;
-    }
+    index = this.outIndex[0];
 
-    this.encode(dataArray,index);
-    this.pool[1]/*inIndex*/.push(index);
+    this.outIndex.splice(0,1);
+
+    this.inIndex.push(index);
+
+    this.modifyPoolElement(index,data);
+
     return index;
-
   };
+  POOL.delete = function(index){
 
-  this.delete = function(index){
-
-    for(var i = 0; i < this.pool[1]/*inIndex*/.length; ++i){
-      if(this.pool[1]/*inIndex*/[i] === index){
-        this.pool[1]/*inIndex*/.splice(i,1);
-        outIndex.push(index);
-        return;
+    for(var id = 0; id < this.inIndex.length; ++id){
+      if(index === this.inIndex[id]){
+        this.inIndex.splice(id,1);
+        this.outIndex.push(index);
       }
     }
   };
-
-  this.getDataTypes = function(){
-    return dataTypes;
+  POOL.poolType = function(){
+    return poolType;
+  };
+  POOL.dataKeys = function(){
+    return DATAKEYS;
+  };
+  POOL.getPool = function(){
+    return {"pool" : this.pool, "index" : this.inIndex};
   };
 
-  this.getNumByte = function(){
-    return numByte;
-  };
+  POOL.init();
+
+  return POOL;
 };

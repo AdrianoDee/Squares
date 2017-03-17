@@ -1,9 +1,15 @@
-var playerman = require("./PlayerMan");
-var poolman = require("./PoolMan.js");
+'use strict'
 
-var express = require('express'),
- 		app = express(),
- 		serv = require('http').Server(app);
+var
+		express = require('express'),
+		app = express(),
+		serv = require('http').Server(app),
+		io = require('socket.io')(serv,{}),
+		poolMan = require('./PoolMan.js'),
+		time = require('./TimeMan.js'),
+		animFrame = require('./AnimMan.js'),
+		SOCKET_LIST = {},
+		PLAYERS= poolMan(["imgId","x","y","dir"],"players",50);
 
 app.get('/',function(req, res) {
 	res.sendFile(__dirname + '/client/index.html');
@@ -12,43 +18,63 @@ app.use('/client',express.static(__dirname + '/client'));
 
 serv.listen(process.env.PORT || 2000);
 
-var io = require('socket.io')(serv,{}),
-		SOCKET_LIST = {};
- 	   	PLAYERS_MANAGER = new poolman.PoolManager(["Uint16",  //Entity_Id			       (int from 0 to        +65.535)
-                                       "Uint32",  //Entity_Position_X    (int from 0 to +4.294.967.295)
-                                       "Uint32",  //Entity_Position_Y    (int from 0 to +4.294.967.295)
-																			 "Uint16",  //Entity_Dimension_W   (int from 0 to        +65.535)
-                                    	 "Uint16"], //Entity_Dimension_H   (int from 0 to        +65.535)
-                                    	 500);
-
 console.log("Server started.");
+console.log(animFrame);
 
-io.sockets.on('connection', function(socket){
 
-  console.log('Player connected');
+io.sockets.on('connection',
+	function(socket){
 
-	var newPlayer = new playerman.PlayerMan();
+		var player 		= Object.create(null);
+				player.x = 250;
+				player.y = 250;
+				//export tileset firstgid
+				player.tileset = 7;
 
-	socket.id = PLAYERS_MANAGER.insert(newPlayer.data);
+		socket.id = PLAYERS.insert(player);
 
-	newPlayer.data[0/*id*/] = socket.id;
+		socket.animId = NaN;
 
-	SOCKET_LIST[socket.id] = socket;
+		SOCKET_LIST[socket.id] = socket;
 
-	socket.emit("initPlayer",newPlayer);
+		console.log("player ID: "+socket.id+" is connected");
 
-	socket.on("playerUpdate",function(data){
-		PLAYERS_MANAGER.encode(data,socket.id);
+		socket.emit("initPlayer",{"id" : socket.id , "player" : player});
+
+		socket.on("updatePlayer",
+			function(data){
+				if(PLAYERS.pool[socket.id].dir !== data.dir){
+					if(socket.animId !== NaN)
+						time.stopAnimation(socket.animId);
+					socket.animId = time.startAnimation(animFrame[data.dir],
+						function(tile){
+							tile += player.tileset;
+							PLAYERS.modifyPoolElement(socket.id,{"imgId":tile});
+						});
+				}
+				PLAYERS.modifyPoolElement(socket.id,data);
+			});
+
+		socket.on('disconnect',
+			function(){
+				delete SOCKET_LIST[socket.id];
+				PLAYERS.delete(socket.id);
+				console.log("player ID: "+socket.id+" is disconnected")
+			});
 	});
-	socket.on("disconnect",function(){
-		PLAYERS_MANAGER.delete(socket.id);
-		delete SOCKET_LIST[socket.id];
+
+time.startSignal(30,
+	function(){
+		io.emit("move")
 	});
-});
+
+time.startSignal(25,
+	function(){
+		io.emit("players",PLAYERS.getPool());
+	});
 
 setInterval(function(){
 
-	for(var key in SOCKET_LIST)
-		SOCKET_LIST[key].emit("updatePlayers",PLAYERS_MANAGER.pool);
+	time.update();
 
 },1000/25);

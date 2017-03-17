@@ -1,7 +1,7 @@
 //Implementazione del metodo transfer per gli ArrayBuffer
 ;var exports = module.exports = {};
 
-exports.Transfer = function () {
+exports.transfer = function () {
 
 if (!ArrayBuffer.transfer) {
     ArrayBuffer.transfer = function(source, length) {
