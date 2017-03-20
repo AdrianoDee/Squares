@@ -78,8 +78,6 @@
     var
         id_1  = NaN,
         id_2  = NaN,
-        imgLay= 0,
-        objLay= 0,
         imgSrc= "",
         img = null;
     //dimensioni mappa in unità celle
